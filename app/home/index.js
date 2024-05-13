@@ -6,18 +6,61 @@ import {
   ScrollView,
   TextInput,
 } from "react-native";
-import React, { useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Feather, FontAwesome6, Ionicons } from "@expo/vector-icons";
 import { hp, wp } from "../../helpers/common";
 import { theme } from "../../constants/theme";
-
+import Categories from "../../components/categories";
+import { apiCall } from "../api";
+import ImageGrid from "../../components/imageGrid";
+import { debounce } from "lodash";
 const HomeScreen = () => {
   const { top } = useSafeAreaInsets();
   const paddingTop = top > 0 ? top + 10 : 30;
 
   const [search, setSearch] = useState("");
   const searchInputRef = useRef(null);
+  const [activeCategory, setActiveCategory] = useState(null);
+  const [images, setImages] = useState([]);
+  const [dataLength, setDataLength] = useState("");
+  var page = 1;
+  const handleCategory = (cat) => {
+    setActiveCategory(cat);
+  };
+  useEffect(() => {
+    fetchImages();
+  }, []);
+
+  const fetchImages = async (params = { page: 1 }, append = false) => {
+    let res = await apiCall(params);
+    const dataLength = res.data.hits.length;
+    setDataLength(dataLength);
+
+    if (res?.data?.hits) {
+      if (append) setImages([...images, ...res.data.hits]);
+      else setImages([...res.data.hits]);
+    }
+  };
+
+  const handleSearch = (text) => {
+    setSearch(text);
+    if (text.length > 2) {
+      //search for that text
+      page = 1;
+      setImages([]);
+      fetchImages({ page: 1, q: text });
+    }
+    if (text == "") {
+      page = 1;
+      setImages([]);
+      fetchImages({ page: 1 });
+      searchInputRef?.current?.clear();
+    }
+  };
+
+  const handleTextDebounce = useCallback(debounce(handleSearch, 400, []));
+
   return (
     <View style={[styles.container, { paddingTop }]}>
       {/* Header */}
@@ -50,12 +93,15 @@ const HomeScreen = () => {
           <TextInput
             placeholder="Seach for photos"
             style={styles.searchInput}
-            value={search}
-            onChangeText={(value) => setSearch(value)}
+            // value={search}
+            onChangeText={handleTextDebounce}
             ref={searchInputRef}
           />
           {search && (
-            <Pressable style={styles.closeIcon} onPress={() => setSearch("")}>
+            <Pressable
+              style={styles.closeIcon}
+              onPress={() => handleSearch("")}
+            >
               <Ionicons
                 name="close"
                 size={24}
@@ -64,6 +110,28 @@ const HomeScreen = () => {
             </Pressable>
           )}
         </View>
+
+        {dataLength > 0 ? (
+          <>
+        {/* Category Section */}
+
+            <View>
+              <Categories
+                activeCategory={activeCategory}
+                handleCategory={handleCategory}
+              />
+            </View>
+            <View>
+              {/* Image Sectiion */}
+
+              {images.length > 0 && <ImageGrid images={images} />}
+            </View>
+          </>
+        ) : (
+          <View>
+            <Text style={styles.noData}>No Data available</Text>
+          </View>
+        )}
       </ScrollView>
     </View>
   );
@@ -86,7 +154,7 @@ const styles = StyleSheet.create({
   },
   searchBar: {
     marginHorizontal: wp(4),
-    // display: "flex",
+
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
@@ -110,6 +178,12 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.neutral(0.1),
     padding: 8,
     borderRadius: theme.radius.sm,
+  },
+  noData: {
+    textAlign: "center",
+    fontSize: hp(2),
+    fontWeight: theme.fontWeights.semobold,
+    color: theme.colors.neutral(0.9),
   },
 });
 export default HomeScreen;
