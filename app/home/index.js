@@ -15,7 +15,9 @@ import Categories from "../../components/categories";
 import { apiCall } from "../api";
 import ImageGrid from "../../components/imageGrid";
 import { debounce } from "lodash";
+import FilterModal from "../../components/filterModal";
 const HomeScreen = () => {
+  var page = 1;
   const { top } = useSafeAreaInsets();
   const paddingTop = top > 0 ? top + 10 : 30;
 
@@ -24,7 +26,11 @@ const HomeScreen = () => {
   const [activeCategory, setActiveCategory] = useState(null);
   const [images, setImages] = useState([]);
   const [dataLength, setDataLength] = useState("");
-  var page = 1;
+  const modalRef = useRef(null);
+  const [filters, setFilters] = useState(null);
+
+
+  console.log(filters,'------------------');
   const handleCategory = (cat) => {
     setActiveCategory(cat);
     setSearch("");
@@ -42,6 +48,19 @@ const HomeScreen = () => {
     fetchImages();
   }, []);
 
+  const openFilterModal = () => {
+    modalRef?.current?.present();
+  };
+  const closeFilterModal = () => {
+    modalRef?.current?.close();
+  };
+
+  const applyFilter = () => {
+    closeFilterModal();
+  };
+  const resetFilter = () => {
+    closeFilterModal();
+  };
   const fetchImages = async (params = { page: 1 }, append = false) => {
     let res = await apiCall(params);
     const dataLength = res.data.hits.length;
@@ -59,15 +78,15 @@ const HomeScreen = () => {
       //search for that text
       page = 1;
       setImages([]);
-    setActiveCategory(null)
+      setActiveCategory(null);
 
       fetchImages({ page: 1, q: text });
     }
     if (text == "") {
       page = 1;
       setImages([]);
-      
-    setActiveCategory(null)  //Clear the catgry when searching
+
+      setActiveCategory(null); //Clear the catgry when searching
 
       fetchImages({ page: 1 });
       searchInputRef?.current?.clear();
@@ -83,7 +102,7 @@ const HomeScreen = () => {
         <Pressable>
           <Text style={styles.title}>Pixels</Text>
         </Pressable>
-        <Pressable>
+        <Pressable onPress={openFilterModal}>
           <FontAwesome6
             name="bars-staggered"
             size={22}
@@ -148,6 +167,17 @@ const HomeScreen = () => {
           </View>
         )}
       </ScrollView>
+
+      {/* Modal for filter section */}
+
+      <FilterModal
+        modalRef={modalRef}
+        filters={filters}
+        setFilters={setFilters}
+        onClose={closeFilterModal}
+        onApply={applyFilter}
+        onReset={resetFilter}
+      />
     </View>
   );
 };
