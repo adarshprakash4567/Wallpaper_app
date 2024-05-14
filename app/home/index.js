@@ -27,6 +27,16 @@ const HomeScreen = () => {
   var page = 1;
   const handleCategory = (cat) => {
     setActiveCategory(cat);
+    setSearch("");
+    setImages([]);
+    page = 1;
+    let params = {
+      page,
+    };
+    if (cat) {
+      params.category = cat;
+      fetchImages(params, false);
+    }
   };
   useEffect(() => {
     fetchImages();
@@ -49,11 +59,16 @@ const HomeScreen = () => {
       //search for that text
       page = 1;
       setImages([]);
+    setActiveCategory(null)
+
       fetchImages({ page: 1, q: text });
     }
     if (text == "") {
       page = 1;
       setImages([]);
+      
+    setActiveCategory(null)  //Clear the catgry when searching
+
       fetchImages({ page: 1 });
       searchInputRef?.current?.clear();
     }
@@ -113,7 +128,7 @@ const HomeScreen = () => {
 
         {dataLength > 0 ? (
           <>
-        {/* Category Section */}
+            {/* Category Section */}
 
             <View>
               <Categories

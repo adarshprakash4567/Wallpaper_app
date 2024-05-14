@@ -26,16 +26,27 @@ const Categories = ({ handleCategory, activeCategory }) => {
 };
 
 const CategoryItem = ({ title, index, isActive, handleCategory }) => {
- let textColor = isActive ? theme.colors.white : theme.colors.neutral(0.8)
- let backgrounColor = isActive ? theme.colors.neutral(0.8) : theme.colors.white
- 
-    return (
-    <Animated.View entering={FadeInRight.delay(index*200).duration(1000).springify().damping(14)}>
-      <Pressable
+  let textColor = isActive ? theme.colors.white : theme.colors.neutral(0.8);
+  let backgrounColor = isActive
+    ? theme.colors.neutral(0.8)
+    : theme.colors.white;
+
+  return (
+    <Animated.View
+      entering={FadeInRight.delay(index * 200)
+        .duration(1000)
+        .springify()
+        .damping(14)}
+    >
+    <Pressable
         onPress={() => handleCategory(isActive ? null : title)}
-        style={[styles.category,{backgroundColor:backgrounColor}]}
+        style={[
+          styles.category,
+          { backgroundColor: backgrounColor },
+          isActive && { pointerEvents: "none" }, 
+        ]}
       >
-        <Text style={[styles.title ,{color:textColor}]}>{title}</Text>
+        <Text style={[styles.title, { color: textColor }]}>{title}</Text>
       </Pressable>
     </Animated.View>
   );
