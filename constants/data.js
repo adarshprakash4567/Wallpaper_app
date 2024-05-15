@@ -25,17 +25,15 @@ const filters = {
   orientation: ["horizontal", "vertical"],
   type: ["photo", "illustration", "vector"],
   colors: [
-    "grayscale",
-    "transparent",
     "red",
     "orange",
     "yellow",
     "green",
     "turquoise",
     "blue",
-    "lilac",
+
     "pink",
-    "white",
+
     "gray",
     "black",
     "brown",
@@ -44,5 +42,5 @@ const filters = {
 
 export const data = {
   categories,
-  filters
+  filters,
 };

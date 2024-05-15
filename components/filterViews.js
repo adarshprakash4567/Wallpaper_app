@@ -37,6 +37,32 @@ export const CommonFilterRow = ({ data, filterName, filters, setFilters }) => {
     </View>
   );
 };
+export const ColorFilter = ({ data, filterName, filters, setFilters }) => {
+  const onSelect = (item) => {
+    setFilters({ ...filters, [filterName]: item });
+  };
+
+  return (
+    <View style={styles.flexRowWrap}>
+      {data &&
+        data.map((item, index) => {
+          let isActive = filters && filters[filterName] === item;
+          let borderColor = isActive ? theme.colors.neutral(0.4) : 'white'
+          return (
+            <Pressable key={item} onPress={() => onSelect(item)}>
+              <View style={[styles.colorWrapper,{borderColor}]}>
+                <View
+                  style={[styles.colorSection, { backgroundColor: item }]}
+                >
+               
+                </View>
+              </View>
+            </Pressable>
+          );
+        })}
+    </View>
+  );
+};
 
 const styles = StyleSheet.create({
   sectionContainer: {
@@ -59,5 +85,17 @@ const styles = StyleSheet.create({
     borderColor: theme.colors.grayBG,
     borderRadius: theme.radius.xs,
     borderCurve: "continuous",
+  },
+  colorSection: {
+    height: 30,
+    width: 40,
+    borderRadius: theme.radius.sm-3,
+    borderCurve: "continuous",
+  },
+  colorWrapper: {
+    padding: 3,
+    borderRadius: theme.radius.sm,
+    borderWidth:2,
+    borderCurve:'continuous'
   },
 });

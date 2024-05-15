@@ -5,6 +5,7 @@ import {
   Pressable,
   ScrollView,
   TextInput,
+  ActivityIndicator,
 } from "react-native";
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -30,7 +31,6 @@ const HomeScreen = () => {
   const [filters, setFilters] = useState(null);
 
 
-  console.log(filters,'------------------');
   const handleCategory = (cat) => {
     setActiveCategory(cat);
     setSearch("");
@@ -38,6 +38,7 @@ const HomeScreen = () => {
     page = 1;
     let params = {
       page,
+      ...filters,
     };
     if (cat) {
       params.category = cat;
@@ -56,9 +57,32 @@ const HomeScreen = () => {
   };
 
   const applyFilter = () => {
+    if (filters) {
+      page = 1;
+      setImages([]);
+      let params = {
+        page,
+        ...filters,
+      };
+      if (activeCategory) params.category = activeCategory;
+      if (search) params.q = search;
+      fetchImages(params, false);
+    }
     closeFilterModal();
   };
   const resetFilter = () => {
+    if (filters) {
+      page = 1;
+      setFilters(null);
+      setImages([]);
+      let params = {
+        page,
+      };
+      if (activeCategory) params.category = activeCategory;
+      if (search) params.q = search;
+      fetchImages(params, false);
+    }
+
     closeFilterModal();
   };
   const fetchImages = async (params = { page: 1 }, append = false) => {
@@ -80,7 +104,7 @@ const HomeScreen = () => {
       setImages([]);
       setActiveCategory(null);
 
-      fetchImages({ page: 1, q: text });
+      fetchImages({ page: 1, q: text, ...filters });
     }
     if (text == "") {
       page = 1;
@@ -88,10 +112,25 @@ const HomeScreen = () => {
 
       setActiveCategory(null); //Clear the catgry when searching
 
-      fetchImages({ page: 1 });
+      fetchImages({ page, ...filters });
       searchInputRef?.current?.clear();
     }
   };
+
+  const clearFilter =(filterName) =>{
+    let filterss = {...filters};
+    delete filterss[filterName];
+    setFilters({...filterss});
+    page = 1;
+    setImages([]);
+    let params ={
+      page,
+      ...filterss
+    }
+    if (activeCategory) params.category = activeCategory;
+    if (search) params.q = search;
+    fetchImages(params, false);
+  }
 
   const handleTextDebounce = useCallback(debounce(handleSearch, 400, []));
 
@@ -155,6 +194,41 @@ const HomeScreen = () => {
                 handleCategory={handleCategory}
               />
             </View>
+
+            {/* Filter items */}
+            {filters && (
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={styles.filters}
+              >
+                {Object.keys(filters).map((key, index) => {
+                  return (
+                    <View key={key} style={styles.filterItem}>
+                     {
+                      key=='colors' ? (
+                       <View style={{height:20,width:30,borderRadius:7,backgroundColor:filters[key]}}></View>
+
+                      ) : (
+                        <Text style={styles.filterItemText}>{filters[key]}</Text>
+
+                      )
+                     }
+                      <Pressable
+                        style={styles.closeIcon2}
+                        onPress={() => clearFilter(key)}
+                      >
+                        <Ionicons
+                          name="close"
+                          size={14}
+                          color={theme.colors.neutral(0.9)}
+                        />
+                      </Pressable>
+                    </View>
+                  );
+                })}
+              </ScrollView>
+            )}
             <View>
               {/* Image Sectiion */}
 
@@ -166,6 +240,14 @@ const HomeScreen = () => {
             <Text style={styles.noData}>No Data available</Text>
           </View>
         )}
+
+        {/* Loader */}
+
+        <View
+          stylele={{ marginBottom: 70, marginTop: images.length > 0 ? 10 : 70 }}
+        >
+          <ActivityIndicator size="large" />
+        </View>
       </ScrollView>
 
       {/* Modal for filter section */}
@@ -230,5 +312,30 @@ const styles = StyleSheet.create({
     fontWeight: theme.fontWeights.semobold,
     color: theme.colors.neutral(0.9),
   },
+  filters: {
+    padding:3,
+    paddingHorizontal: wp(5),
+    gap: 10,
+  },
+  filterItem: {
+    backgroundColor: theme.colors.grayBG,
+    padding: 3,
+    flexDirection: "row",
+    borderRadius: theme.radius.xs,
+    gap: 10,
+    paddingHorizontal: 10,
+    justifyContent:'center',
+    alignItems:'center'
+  },
+  filterItemText:{
+    fontSize:hp(1.9),
+
+  },
+  closeIcon2:{
+    backgroundColor:theme.colors.neutral(0.2),
+    padding:4,
+    borderRadius:7
+
+  }
 });
 export default HomeScreen;
