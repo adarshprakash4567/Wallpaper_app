@@ -17,8 +17,10 @@ import { apiCall } from "../api";
 import ImageGrid from "../../components/imageGrid";
 import { debounce } from "lodash";
 import FilterModal from "../../components/filterModal";
+import { useRouter } from "expo-router";
 const HomeScreen = () => {
-  var page = 1;
+  //  var page = 1;
+  const [page, setPage] = useState(1);
   const { top } = useSafeAreaInsets();
   const paddingTop = top > 0 ? top + 10 : 30;
 
@@ -28,20 +30,27 @@ const HomeScreen = () => {
   const [images, setImages] = useState([]);
   const [dataLength, setDataLength] = useState("");
   const modalRef = useRef(null);
+  const scrollRef = useRef(null);
   const [filters, setFilters] = useState(null);
+  const [isEndReached, setIsEndReached] = useState(false);
 
+  const [darkMode, setDarkMode] = useState(true);
+  const router = useRouter();
 
   const handleCategory = (cat) => {
     setActiveCategory(cat);
-    setSearch("");
+    // setSearch("");
     setImages([]);
-    page = 1;
+    setPage(1);
+    // page = 1;
     let params = {
-      page,
+      page: 1,
       ...filters,
     };
     if (cat) {
       params.category = cat;
+      if (search) params.q = search;
+
       fetchImages(params, false);
     }
   };
@@ -55,10 +64,38 @@ const HomeScreen = () => {
   const closeFilterModal = () => {
     modalRef?.current?.close();
   };
+  const handleScroll = (event) => {
+    const contentHeight = event.nativeEvent.contentSize.height;
+    const scrollViewHeight = event.nativeEvent.layoutMeasurement.height;
+    const scrollOffset = event.nativeEvent.contentOffset.y;
+    const bottomposition = contentHeight - scrollViewHeight;
+    if (scrollOffset >= bottomposition - 1) {
+      if (!isEndReached && images.length > 24) {
+        setIsEndReached(true);
+        setPage(page + 1);
+        let params = {
+          page,
+          ...filters,
+        };
+        if (activeCategory) params.category = activeCategory;
+        if (search) params.q = search;
+        fetchImages(params, true);
+      }
+    } else if (isEndReached) {
+      setIsEndReached(false);
+    }
+  };
+  const scrollToTop = () => {
+    scrollRef?.current?.scrollTo({
+      y: 0,
+      animated: true,
+    });
+  };
 
   const applyFilter = () => {
     if (filters) {
-      page = 1;
+      // page = 1;
+      setPage(1);
       setImages([]);
       let params = {
         page,
@@ -72,7 +109,9 @@ const HomeScreen = () => {
   };
   const resetFilter = () => {
     if (filters) {
-      page = 1;
+      // page = 1;\
+
+      setPage(1);
       setFilters(null);
       setImages([]);
       let params = {
@@ -85,9 +124,11 @@ const HomeScreen = () => {
 
     closeFilterModal();
   };
-  const fetchImages = async (params = { page: 1 }, append = false) => {
+  const [hitsImg, setHitsImg] = useState("");
+  const fetchImages = async (params = { page }, append = true) => {
     let res = await apiCall(params);
     const dataLength = res.data.hits.length;
+    setHitsImg(res.data.totalHits);
     setDataLength(dataLength);
 
     if (res?.data?.hits) {
@@ -100,57 +141,96 @@ const HomeScreen = () => {
     setSearch(text);
     if (text.length > 2) {
       //search for that text
-      page = 1;
+      // page = 1;
+      setPage(1);
       setImages([]);
       setActiveCategory(null);
 
-      fetchImages({ page: 1, q: text, ...filters });
+      fetchImages({ page: 1, q: text, ...filters }, false);
     }
     if (text == "") {
-      page = 1;
+      // page = 1;
+      setPage(1);
       setImages([]);
 
       setActiveCategory(null); //Clear the catgry when searching
 
-      fetchImages({ page, ...filters });
+      fetchImages({ page: 1, ...filters }, false);
       searchInputRef?.current?.clear();
     }
   };
 
-  const clearFilter =(filterName) =>{
-    let filterss = {...filters};
+  const clearFilter = (filterName) => {
+    let filterss = { ...filters };
     delete filterss[filterName];
-    setFilters({...filterss});
-    page = 1;
+    setFilters({ ...filterss });
+
+    // page = 1;
+    setPage(1);
+
     setImages([]);
-    let params ={
+    let params = {
       page,
-      ...filterss
-    }
+      ...filterss,
+    };
     if (activeCategory) params.category = activeCategory;
     if (search) params.q = search;
     fetchImages(params, false);
-  }
+  };
 
   const handleTextDebounce = useCallback(debounce(handleSearch, 400, []));
 
   return (
-    <View style={[styles.container, { paddingTop }]}>
+    <View style={[ { paddingTop },{
+      flex: 1,
+      gap: 15,
+      backgroundColor: darkMode && '#31363F',
+
+
+    }]}>
       {/* Header */}
       <View style={styles.header}>
-        <Pressable>
-          <Text style={styles.title}>Pixels</Text>
-        </Pressable>
-        <Pressable onPress={openFilterModal}>
-          <FontAwesome6
-            name="bars-staggered"
-            size={22}
-            color={theme.colors.neutral(0.7)}
-          />
-        </Pressable>
+        <View>
+          <Pressable onPress={scrollToTop}>
+            <Text style={[styles.title,{color:darkMode && 'white'}]}>Pixels</Text>
+          </Pressable>
+        </View>
+        <View style={styles.diffMode}>
+          <View style={styles.modes}>
+            {darkMode ? (
+              <Pressable onPress={() => setDarkMode(false)}>
+                <Feather
+                  name="moon"
+                  size={22}
+                  color={theme.colors.neutral(0.7)}
+                  style={{color:darkMode && 'white'}}
+                />
+              </Pressable>
+            ) : (
+              <Pressable onPress={() => setDarkMode(true)}>
+                <Feather
+                  name="sun"
+                  size={22}
+                  color={theme.colors.neutral(0.7)}
+                />
+              </Pressable>
+            )}
+          </View>
+          <Pressable onPress={openFilterModal}>
+            <FontAwesome6
+              name="bars-staggered"
+              size={22}
+              style={{color:darkMode && 'white'}}
+              color={theme.colors.neutral(0.7)}
+            />
+          </Pressable>
+        </View>
       </View>
       {/* Search Bar */}
       <ScrollView
+        onScroll={handleScroll}
+        scrollEventThrottle={5} //secroll event when firing
+        ref={scrollRef}
         contentContainerStyle={{
           gap: 15,
         }}
@@ -184,70 +264,83 @@ const HomeScreen = () => {
           )}
         </View>
 
-        {dataLength > 0 ? (
-          <>
-            {/* Category Section */}
+        <>
+          {/* Category Section */}
 
-            <View>
-              <Categories
-                activeCategory={activeCategory}
-                handleCategory={handleCategory}
-              />
-            </View>
-
-            {/* Filter items */}
-            {filters && (
-              <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                contentContainerStyle={styles.filters}
-              >
-                {Object.keys(filters).map((key, index) => {
-                  return (
-                    <View key={key} style={styles.filterItem}>
-                     {
-                      key=='colors' ? (
-                       <View style={{height:20,width:30,borderRadius:7,backgroundColor:filters[key]}}></View>
-
-                      ) : (
-                        <Text style={styles.filterItemText}>{filters[key]}</Text>
-
-                      )
-                     }
-                      <Pressable
-                        style={styles.closeIcon2}
-                        onPress={() => clearFilter(key)}
-                      >
-                        <Ionicons
-                          name="close"
-                          size={14}
-                          color={theme.colors.neutral(0.9)}
-                        />
-                      </Pressable>
-                    </View>
-                  );
-                })}
-              </ScrollView>
-            )}
-            <View>
-              {/* Image Sectiion */}
-
-              {images.length > 0 && <ImageGrid images={images} />}
-            </View>
-          </>
-        ) : (
           <View>
-            <Text style={styles.noData}>No Data available</Text>
+            <Categories
+              activeCategory={activeCategory}
+              handleCategory={handleCategory}
+            />
+          </View>
+
+          {/* Filter items */}
+          {filters && (
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.filters}
+            >
+              {Object.keys(filters).map((key, index) => {
+                return (
+                  <View key={key} style={styles.filterItem}>
+                    {key == "colors" ? (
+                      <View
+                        style={{
+                          height: 20,
+                          width: 30,
+                          borderRadius: 7,
+                          backgroundColor: filters[key],
+                        }}
+                      ></View>
+                    ) : (
+                      <Text style={styles.filterItemText}>{filters[key]}</Text>
+                    )}
+                    <Pressable
+                      style={styles.closeIcon2}
+                      onPress={() => clearFilter(key)}
+                    >
+                      <Ionicons
+                        name="close"
+                        size={14}
+                        color={theme.colors.neutral(0.9)}
+                      />
+                    </Pressable>
+                  </View>
+                );
+              })}
+            </ScrollView>
+          )}
+          <View>
+            {/* Image Sectiion */}
+
+            {images.length > 0 && <ImageGrid images={images} router={router} />}
+          </View>
+        </>
+
+        {dataLength < 24 && (
+          <View>
+            {images && hitsImg > 0 ? (
+              <Text style={styles.noData}>
+                Oops. You've reached the end of the content.
+              </Text>
+            ) : (
+              <Text style={styles.noData}>No Data available</Text>
+            )}
           </View>
         )}
 
         {/* Loader */}
-
-        <View
-          stylele={{ marginBottom: 70, marginTop: images.length > 0 ? 10 : 70 }}
-        >
-          <ActivityIndicator size="large" />
-        </View>
+        {dataLength > 24 && (
+          <View
+            stylele={{
+              marginBottom: 70,
+              marginTop: images.length > 0 ? 10 : 70,
+            }}
+          >
+            <ActivityIndicator size="large" />
+          </View>
+        )}
       </ScrollView>
 
       {/* Modal for filter section */}
@@ -264,14 +357,15 @@ const HomeScreen = () => {
   );
 };
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    gap: 15,
-  },
+  // container: {
+  //   flex: 1,
+  //   gap: 15,
+  //   backgroundColor: darkMode ? 'red': "green",
+  // },
   header: {
     marginHorizontal: wp(4),
     flexDirection: "row",
-    justifyContent: "space-between",
+    // justifyContent: "space-between",
     alignItems: "center",
   },
   title: {
@@ -313,7 +407,7 @@ const styles = StyleSheet.create({
     color: theme.colors.neutral(0.9),
   },
   filters: {
-    padding:3,
+    padding: 3,
     paddingHorizontal: wp(5),
     gap: 10,
   },
@@ -324,18 +418,29 @@ const styles = StyleSheet.create({
     borderRadius: theme.radius.xs,
     gap: 10,
     paddingHorizontal: 10,
-    justifyContent:'center',
-    alignItems:'center'
+    justifyContent: "center",
+    alignItems: "center",
   },
-  filterItemText:{
-    fontSize:hp(1.9),
-
+  filterItemText: {
+    fontSize: hp(1.9),
   },
-  closeIcon2:{
-    backgroundColor:theme.colors.neutral(0.2),
-    padding:4,
-    borderRadius:7
-
-  }
+  closeIcon2: {
+    backgroundColor: theme.colors.neutral(0.2),
+    padding: 4,
+    borderRadius: 7,
+  },
+  modes: {
+    display: "flex",
+    flexDirection: "row",
+    justifyContent: "center",
+    gap: 21,
+  },
+  diffMode: {
+    display: "flex",
+    flexDirection: "row",
+    gap: 46,
+    width: "95%",
+    justifyContent: "flex-end;",
+  },
 });
 export default HomeScreen;
