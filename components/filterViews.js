@@ -2,10 +2,10 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 import { capitalize, hp } from "../helpers/common";
 import { theme } from "../constants/theme";
 
-export const SectionView = ({ title, content }) => {
+export const SectionView = ({ title, content ,darkMode}) => {
   return (
     <View style={styles.sectionContainer}>
-      <Text style={styles.sectionTitle}>{title}</Text>
+      <Text style={[styles.sectionTitle,{ color:!darkMode ? theme.colors.neutral(0.9) : 'white'}]}>{title}</Text>
       <View>{content}</View>
     </View>
   );
@@ -21,7 +21,7 @@ export const CommonFilterRow = ({ data, filterName, filters, setFilters }) => {
         data.map((item, index) => {
           let isActive = filters && filters[filterName] === item;
           let backgroundColor = isActive ? theme.colors.neutral(0.7) : "white";
-          let color = isActive ? theme.colors.white : theme.colors.neutral(0.7);
+          let color = isActive ? theme.colors.white   : theme.colors.neutral(0.7);
           return (
             <Pressable
               key={item}

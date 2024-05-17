@@ -5,7 +5,7 @@ import { hp, wp } from "../helpers/common";
 import { theme } from "../constants/theme";
 import Animated, { FadeInRight } from "react-native-reanimated";
 
-const Categories = ({ handleCategory, activeCategory }) => {
+const Categories = ({ handleCategory, activeCategory,darkMode }) => {
   return (
     <FlatList
       horizontal
@@ -19,14 +19,17 @@ const Categories = ({ handleCategory, activeCategory }) => {
           handleCategory={handleCategory}
           title={item}
           index={index}
+          darkMode={darkMode}
         />
       )}
     />
   );
 };
 
-const CategoryItem = ({ title, index, isActive, handleCategory }) => {
+const CategoryItem = ({ title, index, isActive, handleCategory,darkMode }) => {
   let textColor = isActive ? theme.colors.white : theme.colors.neutral(0.8);
+    let border = !darkMode && '1px solid grey';
+
   let backgrounColor = isActive
     ? theme.colors.neutral(0.8)
     : theme.colors.white;
@@ -44,6 +47,7 @@ const CategoryItem = ({ title, index, isActive, handleCategory }) => {
           styles.category,
           { backgroundColor: backgrounColor },
           isActive && { pointerEvents: "none" }, 
+          {border:border}
         ]}
       >
         <Text style={[styles.title, { color: textColor }]}>{title}</Text>

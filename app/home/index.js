@@ -34,7 +34,7 @@ const HomeScreen = () => {
   const [filters, setFilters] = useState(null);
   const [isEndReached, setIsEndReached] = useState(false);
 
-  const [darkMode, setDarkMode] = useState(true);
+  const [darkMode, setDarkMode] = useState(false);
   const router = useRouter();
 
   const handleCategory = (cat) => {
@@ -181,18 +181,28 @@ const HomeScreen = () => {
   const handleTextDebounce = useCallback(debounce(handleSearch, 400, []));
 
   return (
-    <View style={[ { paddingTop },{
-      flex: 1,
-      gap: 15,
-      backgroundColor: darkMode && '#31363F',
-
-
-    }]}>
+    <View
+      style={[
+        { paddingTop },
+        {
+          flex: 1,
+          gap: 15,
+          backgroundColor: darkMode ? theme.colors.neutral(0.9) : "white",
+        },
+      ]}
+    >
       {/* Header */}
-      <View style={styles.header}>
+      <View style={[styles.header]}>
         <View>
           <Pressable onPress={scrollToTop}>
-            <Text style={[styles.title,{color:darkMode && 'white'}]}>Pixels</Text>
+            <Text
+              style={[
+                styles.title,
+                { color: darkMode ? "white" : theme.colors.neutral(0.9) },
+              ]}
+            >
+              Pixels
+            </Text>
           </Pressable>
         </View>
         <View style={styles.diffMode}>
@@ -203,7 +213,9 @@ const HomeScreen = () => {
                   name="moon"
                   size={22}
                   color={theme.colors.neutral(0.7)}
-                  style={{color:darkMode && 'white'}}
+                  style={{
+                    color: darkMode ? "white" : theme.colors.neutral(0.9),
+                  }}
                 />
               </Pressable>
             ) : (
@@ -220,7 +232,7 @@ const HomeScreen = () => {
             <FontAwesome6
               name="bars-staggered"
               size={22}
-              style={{color:darkMode && 'white'}}
+              style={{ color: darkMode ? "white" : theme.colors.neutral(0.9) }}
               color={theme.colors.neutral(0.7)}
             />
           </Pressable>
@@ -271,6 +283,7 @@ const HomeScreen = () => {
             <Categories
               activeCategory={activeCategory}
               handleCategory={handleCategory}
+              darkMode={darkMode}
             />
           </View>
 
@@ -321,11 +334,23 @@ const HomeScreen = () => {
         {dataLength < 24 && (
           <View>
             {images && hitsImg > 0 ? (
-              <Text style={styles.noData}>
+              <Text
+                style={[
+                  styles.noData,
+                  { color: darkMode ? "white" : theme.colors.neutral(0.9) },
+                ]}
+              >
                 Oops. You've reached the end of the content.
               </Text>
             ) : (
-              <Text style={styles.noData}>No Data available</Text>
+              <Text
+                style={[
+                  styles.noData,
+                  { color: darkMode ? "white" : theme.colors.neutral(0.9) },
+                ]}
+              >
+                No Data available
+              </Text>
             )}
           </View>
         )}
@@ -352,6 +377,7 @@ const HomeScreen = () => {
         onClose={closeFilterModal}
         onApply={applyFilter}
         onReset={resetFilter}
+        darkMode={darkMode}
       />
     </View>
   );
@@ -364,6 +390,7 @@ const styles = StyleSheet.create({
   // },
   header: {
     marginHorizontal: wp(4),
+    justifyContent: "space-between",
     flexDirection: "row",
     // justifyContent: "space-between",
     alignItems: "center",
@@ -439,8 +466,8 @@ const styles = StyleSheet.create({
     display: "flex",
     flexDirection: "row",
     gap: 46,
-    width: "95%",
-    justifyContent: "flex-end;",
+
+    justifyContent: "flex-end",
   },
 });
 export default HomeScreen;

@@ -28,7 +28,7 @@ const ImageScreen = () => {
   const filePath = `${FileSystem.documentDirectory}${fileName}`;
   const getSize = () => {
     const aspectRatio = item?.imageWidth / item?.imageHeight;
-    const maxWidth = Platform.OS == "web" ? wp(50) : wp(92);
+    const maxWidth = Platform.OS == "web" ? wp(30) : wp(92);
     let calculatedHeight = maxWidth / aspectRatio;
     let calculatedWidth = maxWidth;
     if (aspectRatio < 1) {
@@ -118,7 +118,7 @@ const ImageScreen = () => {
   };
   return (
     <BlurView tint="dark" intensity={60} style={styles.container}>
-      <View>
+      <View style={getSize()}>
         <View style={styles.loading}>
           {status == "loading" && (
             <ActivityIndicator size="large" color="white" />

@@ -22,6 +22,7 @@ const FilterModal = ({
   onReset,
   filters,
   setFilters,
+  darkMode
 }) => {
   const snapPoints = useMemo(() => ["75%"], []);
   return (
@@ -33,9 +34,9 @@ const FilterModal = ({
       backdropComponent={CustomBackdrop}
       //   onChange={handleSheetChanges}
     >
-      <BottomSheetView style={styles.contentContainer}>
+      <BottomSheetView style={[styles.contentContainer, {backgroundColor:darkMode &&theme.colors.neutral(0.9)}]}>
         <View style={styles.content}>
-          <Text style={styles.filterText}>Filters</Text>
+          <Text style={[styles.filterText,{color:darkMode && 'white'}]}>Filters</Text>
           {Object.keys(sections).map((SectionName, index) => {
             let sectionView = sections[SectionName];
             let title = capitalize(SectionName);
@@ -48,6 +49,7 @@ const FilterModal = ({
                   .damping(11)}
               >
                 <SectionView
+                darkMode={darkMode}
                   title={title}
                   content={sectionView({
                     data: sectionData,
@@ -72,7 +74,7 @@ const FilterModal = ({
               <Text
                 style={[
                   styles.buttonText,
-                  { color: theme.colors.neutral(0.9) },
+                  { color:darkMode  ? 'white' :  theme.colors.neutral(0.9) },
                 ]}
               >
                 Reset
